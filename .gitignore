@@ -1,0 +1,53 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Data files ---
+data/raw/
+data/processed/
+*.csv
+*.xlsx
+*.xls
+*.parquet
+*.zip
+*.sav
+*.pkl
+
+# --- Environments ---
+.env
+.venv/
+env/
+venv/
+*.env
+
+# --- OS / Misc ---
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+*.tmp
+~$*
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Reports / Output ---
+reports/*.aux
+reports/*.out
+reports/*.log
+poster/*.pptx
+poster/*.key
+presentation/*.mp4
+
+# --- Others ---
+*.ipynb_convert.log
