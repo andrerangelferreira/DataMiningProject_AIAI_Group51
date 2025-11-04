@@ -28,7 +28,7 @@ def plot_categories(data, small_cat, big_cat, head, x,y):
 
 
 def num_per_cat(data, numerical_var, cat_var, rotation = 0):
-    sns.set()
+    sns.set(style= "darkgrid")
 
     # Computing mean income per education level
     CLV_mean = data.groupby(cat_var)[numerical_var].mean().reset_index().sort_values(by=numerical_var, ascending= False)
