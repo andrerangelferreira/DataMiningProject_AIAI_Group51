@@ -34,7 +34,8 @@ def num_per_cat(data, numerical_var, cat_var, rotation = 0):
     CLV_mean = data.groupby(cat_var)[numerical_var].mean().reset_index().sort_values(by=numerical_var, ascending= False)
 
     plt.figure(figsize=(8, 5))
-    sns.barplot(data=CLV_mean, x=cat_var, y=numerical_var, hue = cat_var, palette = 'Blues_r',legend=False)
+    custom_palette = sns.light_palette("#1d4e81", reverse=False, as_cmap=False, n_colors=len(CLV_mean))
+    sns.barplot(data=CLV_mean, x=cat_var, y=numerical_var, hue=cat_var, palette=custom_palette, legend=False)
     
     plt.title(f"Average {numerical_var} by {cat_var}")
     plt.xlabel(cat_var)
