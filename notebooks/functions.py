@@ -9,9 +9,9 @@ from sklearn.cluster import DBSCAN
 
 
 def plot_categories(data, small_cat, big_cat, head, x,y):
-    sns.set(style= "dark")
+    sns.set(style= "darkgrid")
 
-    palette = sns.color_palette("tab20", n_colors=len(data[big_cat].unique()))
+    palette = sns.color_palette("viridis", n_colors=len(data[big_cat].unique()))
 
     fig, axes = plt.subplots(int(len(data[big_cat].unique())/3) + 1, 3, figsize=(x, y))
 
@@ -28,18 +28,22 @@ def plot_categories(data, small_cat, big_cat, head, x,y):
 
 
 def num_per_cat(data, numerical_var, cat_var, rotation = 0):
-    sns.set()
+    sns.set(style= "darkgrid")
 
     # Computing mean income per education level
     CLV_mean = data.groupby(cat_var)[numerical_var].mean().reset_index().sort_values(by=numerical_var, ascending= False)
 
     plt.figure(figsize=(8, 5))
-    custom_palette = sns.light_palette("#1d4e81", reverse=False, as_cmap=False, n_colors=len(CLV_mean))
-    sns.barplot(data=CLV_mean, x=cat_var, y=numerical_var, hue=cat_var, palette=custom_palette, legend=False)
+    sns.barplot(data=CLV_mean, 
+                x=cat_var, 
+                y=numerical_var, 
+                hue=cat_var, 
+                palette="viridis",  # Use the formal 'viridis' palette
+                legend=False)
     
-    plt.title(f"Average {numerical_var} by {cat_var}")
-    plt.xlabel(cat_var)
-    plt.ylabel(numerical_var)
+    plt.title(f"Average {numerical_var} by {cat_var}", fontsize=14, fontweight='bold')
+    plt.xlabel(cat_var, fontsize=12)
+    plt.ylabel(numerical_var, fontsize=12)
     plt.xticks()
     plt.tick_params(axis="x", rotation = rotation)
     plt.tight_layout()
