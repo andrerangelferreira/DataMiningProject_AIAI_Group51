@@ -22,7 +22,7 @@ class ScalingDealer(BaseEstimator, TransformerMixin):
             "standard": StandardScaler
         }
 
-        self.cols_to_scale_ = ["Latitude", "Longitude", "Income", "Customer Lifetime Value", "Days_in_prog", "TotalFlights",
+        self.cols_to_scale_ = ["Income", "Customer Lifetime Value", "Days_in_prog", "TotalFlights",
                                "TotalDistance", "TotalPointsAccumulated", "TotalPointsRedeemed", "RecencyInMonths",
                                "Pct_Spend_Month_1", "Pct_Spend_Month_2", "Pct_Spend_Month_3", "Pct_Spend_Month_4", 
                                "Pct_Spend_Month_5", "Pct_Spend_Month_6", "Pct_Spend_Month_7", "Pct_Spend_Month_8", 

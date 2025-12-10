@@ -13,9 +13,12 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
                  threshold=3, # Pick 2 or 3 as the threshold value of "z"
                  z_columns = None,
                  contamination_IF=0.05, 
+                 estimators_IF = 50,
+                 max_samples_IF = "auto",
                  random_state=42,
                  n_neighbors=20, 
                  contamination_LOF= 0.05,
+                 metric_LOF = "euclidean",
                  model_columns = None, #columns selected for IF model or LOF model
                  **kwargs
                  ):
@@ -29,11 +32,14 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
         # Isolation Forest method parameters
         self.contamination_IF = contamination_IF
         self.random_state = random_state
+        self.estimators_IF = estimators_IF
+        self.max_samples_IF = max_samples_IF
         self.model_columns = model_columns
 
         # Local Outliers Factor method parameters
         self.n_neighbors = n_neighbors
         self.contamination_LOF = contamination_LOF
+        self.metric_LOF = metric_LOF
         self.model_columns = model_columns
 
 
@@ -53,8 +59,13 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
 
         elif self.outlier_method == "Isolation_Forest":
 
+            if self.model_columns is None:
+                self.model_columns = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
+
             self.model_ = IsolationForest(
             contamination=self.contamination_IF,
+            n_estimators= self.estimators_IF,
+            max_samples = self.max_samples_IF,
             random_state=self.random_state
             )
             self.model_.fit(X[self.model_columns])
@@ -78,6 +89,7 @@ class OutliersDealer(BaseEstimator, TransformerMixin):
 
             self.model_ = LocalOutlierFactor(
             n_neighbors=self.n_neighbors,
+            metric= self.metric_LOF,
             contamination=self.contamination_LOF, 
             novelty= True
             )

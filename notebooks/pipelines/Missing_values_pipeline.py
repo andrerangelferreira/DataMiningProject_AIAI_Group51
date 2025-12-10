@@ -19,6 +19,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         knn_neighbors=5,           
         random_state=42,
         knn_scaling_method= "standard",
+        iterative_max_iter = 10,
         **kwargs
     ):
         self.imputation_method = imputation_method
@@ -33,6 +34,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
         self.knn_scaling_method = knn_scaling_method
 
         # Iterative imputer
+        self.iterative_max_iter = iterative_max_iter
         self.random_state = random_state
 
 
@@ -48,13 +50,6 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
                 fill_value=self.fill_value
             )
             self.imputer_num.fit(X_train.select_dtypes(include=np.number))
-
-            #imputer for categorical
-            self.imputer_cat = SimpleImputer(
-                strategy=self.strategy_cat,
-                fill_value=self.fill_value
-            )
-            self.imputer_cat.fit(X_train.select_dtypes(exclude=np.number))
 
         #----- FITTING WITH KNN -----
 
@@ -82,13 +77,6 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             )
             self.imputer_num.fit(scaled)
 
-            #imputer for categorical
-            self.imputer_cat = SimpleImputer(
-                strategy=self.strategy_cat,
-                fill_value=self.fill_value
-            )
-            self.imputer_cat.fit(X_train.select_dtypes(exclude=np.number))
-
 
         # ----- FITTING WITH ITERATIVE IMPUTER -----       
 
@@ -96,16 +84,10 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
             #imputer for numerical
             self.imputer_num = IterativeImputer(
+                max_iter = self.iterative_max_iter,
                 random_state=self.random_state
             )
             self.imputer_num.fit(X_train.select_dtypes(include=np.number))
-
-            #imputer for categorical
-            self.imputer_cat = SimpleImputer(
-                strategy=self.strategy_cat,
-                fill_value=self.fill_value
-            )
-            self.imputer_cat.fit(X_train.select_dtypes(exclude=np.number))
 
         return self
 
@@ -119,21 +101,14 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
-            cat_cols = X.select_dtypes(exclude=np.number).columns
 
             #impute
             X_num_imputed = self.imputer_num.transform(X.select_dtypes(include=np.number))
-            X_cat_imputed = self.imputer_cat.transform(X.select_dtypes(exclude=np.number))
 
             # Convert back to DataFrames
             df_num = pd.DataFrame(X_num_imputed, columns=num_cols, index=X.index)
-            df_cat = pd.DataFrame(X_cat_imputed, columns=cat_cols, index=X.index)
 
-            # Combine
-            X_imputed = pd.concat([df_num, df_cat], axis=1)
-            X_imputed = X_imputed[X.columns]
-
-            return X_imputed
+            return df_num
         
         #----- KNN IMPUTATION -----
 
@@ -141,7 +116,6 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
 
             # Split columns
             num_cols = X.select_dtypes(include=np.number).columns
-            cat_cols = X.select_dtypes(exclude=np.number).columns
 
             #Scale numeric values
             scaled = self.scaler.transform(X[num_cols])
@@ -151,15 +125,7 @@ class MissingValuesDealer(BaseEstimator, TransformerMixin):
             #inverse scale
             X_num_imputed = self.scaler.inverse_transform(imputed_scaled) 
 
-            #Categorical values imputation
-            X_cat_imputed = self.imputer_cat.transform(X[cat_cols])
-
             # Convert back to DataFrames
             df_num = pd.DataFrame(X_num_imputed, columns=num_cols, index=X.index)
-            df_cat = pd.DataFrame(X_cat_imputed, columns=cat_cols, index=X.index)
 
-             # Combine
-            X_imputed = pd.concat([df_num, df_cat], axis=1)
-            X_imputed = X_imputed[X.columns]
-
-            return X_imputed
+            return df_num
