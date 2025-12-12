@@ -4,7 +4,12 @@ import matplotlib.pylab as plt
 import seaborn as sns
 import plotly.express as px
 from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
-from sklearn.pipeline import Pipeline
+
+# explicitly require this experimental feature
+from sklearn.experimental import enable_iterative_imputer  # noqa
+# now you can import normally from sklearn.impute
+from sklearn.impute import IterativeImputer
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import RandomizedSearchCV
