@@ -1,0 +1,295 @@
+import warnings
+warnings.filterwarnings('ignore')
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+from scipy.cluster.hierarchy import dendrogram
+import umap
+import math
+
+def apply_perspective_transform(df, perspective_features):
+    """Apply sqrt transformation to relevant columns"""
+    df_transformed = df.copy()
+    
+    for column in df_transformed.columns:
+        # Transform spending, value, distance, and points columns
+        if any(keyword in column.lower() for keyword in 
+               ['spend', 'value', 'distance', 'points', 'accumulated']):
+            df_transformed[column] = np.sqrt(df_transformed[column])
+    
+    return df_transformed
+
+def scale_data_multiple(data, scalers=['standard', 'minmax', 'robust']):
+    """Apply multiple scaling methods and return dict"""
+    scaler_map = {
+        'standard': StandardScaler(),
+        'minmax': MinMaxScaler(),
+        'robust': RobustScaler()
+    }
+    
+    scaled_data = {}
+    for scaler_name in scalers:
+        scaler = scaler_map[scaler_name]
+        scaled_data[scaler_name] = scaler.fit_transform(data)
+    
+    return scaled_data
+
+def plot_clustering_metrics(data, k_min=2, k_max=10, title_prefix=""):
+    """Plot inertia and silhouette scores"""
+    dispersions = []
+    silhouette_scores = []
+    k_clusters = range(k_min, k_max + 1)
+    
+    for k in k_clusters:
+        kmeans = KMeans(n_clusters=k, random_state=42, n_init=10).fit(data)
+        dispersions.append(kmeans.inertia_)
+        labels = kmeans.predict(data)
+        silhouette_scores.append(silhouette_score(data, labels))
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Inertia plot
+    ax1.plot(k_clusters, dispersions, marker='o', linewidth=2, markersize=8)
+    ax1.set_xlabel('Number of Clusters', fontsize=11)
+    ax1.set_ylabel('Inertia', fontsize=11)
+    ax1.set_title(f'{title_prefix}Elbow Method', fontsize=12, fontweight='bold')
+    ax1.grid(True, alpha=0.3)
+    
+    # Silhouette plot
+    ax2.plot(k_clusters, silhouette_scores, marker='o', 
+             linewidth=2, markersize=8, color='orange')
+    ax2.set_xlabel('Number of Clusters', fontsize=11)
+    ax2.set_ylabel('Silhouette Score', fontsize=11)
+    ax2.set_title(f'{title_prefix}Silhouette Analysis', fontsize=12, fontweight='bold')
+    ax2.grid(True, alpha=0.3)
+    
+    # Annotate max silhouette
+    max_idx = silhouette_scores.index(max(silhouette_scores))
+    max_k = list(k_clusters)[max_idx]
+    ax2.axvline(x=max_k, color='red', linestyle='--', alpha=0.5)
+    ax2.text(max_k, max(silhouette_scores), f'  k={max_k}\n  score={max(silhouette_scores):.3f}',
+             fontsize=9, verticalalignment='bottom')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    return dispersions, silhouette_scores
+
+def plot_dendrogram_analysis(data, linkage_method='ward', cut_line=None, title_prefix=""):
+    """Plot dendrogram"""
+    model = AgglomerativeClustering(
+        linkage=linkage_method, 
+        distance_threshold=0, 
+        n_clusters=None
+    ).fit(data)
+    
+    counts = np.zeros(model.children_.shape[0])
+    n_samples = len(model.labels_)
+    
+    for i, merge in enumerate(model.children_):
+        current_count = 0
+        for child_idx in merge:
+            if child_idx < n_samples:
+                current_count += 1
+            else:
+                current_count += counts[child_idx - n_samples]
+        counts[i] = current_count
+    
+    linkage_matrix = np.column_stack([
+        model.children_, 
+        model.distances_, 
+        counts
+    ]).astype(float)
+    
+    plt.figure(figsize=(14, 6))
+    plt.title(f'{title_prefix}Hierarchical Clustering Dendrogram ({linkage_method})',
+              fontsize=13, fontweight='bold')
+    dendrogram(linkage_matrix, truncate_mode='level', p=50)
+    
+    if cut_line is not None:
+        plt.axhline(y=cut_line, color='red', linestyle='--', 
+                   linewidth=2, label=f'Cut at {cut_line}')
+        plt.legend()
+    
+    plt.xlabel('Sample Index', fontsize=11)
+    plt.ylabel('Distance', fontsize=11)
+    plt.tight_layout()
+    plt.show()
+
+def compare_clustering_methods(data_dict, k_values, perspective_name):
+    """
+    Compare clustering methods across different scalers and k values
+    
+    Args:
+        data_dict: Dict with scaler_name: scaled_data
+        k_values: List of k values to test
+        perspective_name: Name of perspective for reporting
+    """
+    results = []
+    
+    for scaler_name, scaled_data in data_dict.items():
+        for k in k_values:
+            # K-Means
+            kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+            km_labels = kmeans.fit_predict(scaled_data)
+            
+            # Hierarchical Ward
+            ward = AgglomerativeClustering(linkage='ward', n_clusters=k)
+            ward_labels = ward.fit_predict(scaled_data)
+            
+            # Calculate metrics for both
+            for method_name, labels in [('KMeans', km_labels), ('Ward', ward_labels)]:
+                silhouette = silhouette_score(scaled_data, labels)
+                davies_bouldin = davies_bouldin_score(scaled_data, labels)
+                calinski = calinski_harabasz_score(scaled_data, labels)
+                
+                results.append({
+                    'Perspective': perspective_name,
+                    'Scaler': scaler_name,
+                    'Method': method_name,
+                    'k': k,
+                    'Silhouette': silhouette,
+                    'Davies_Bouldin': davies_bouldin,
+                    'Calinski_Harabasz': calinski
+                })
+    
+    results_df = pd.DataFrame(results)
+    
+    # Create comparison visualization
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    
+    metrics = [
+        ('Silhouette', 'higher is better', 0),
+        ('Davies_Bouldin', 'lower is better', 1),
+        ('Calinski_Harabasz', 'higher is better', 2)
+    ]
+    
+    for metric_name, direction, idx in metrics:
+        pivot = results_df.pivot_table(
+            values=metric_name,
+            index=['Scaler', 'Method'],
+            columns='k',
+            aggfunc='mean'
+        )
+        
+        sns.heatmap(pivot, annot=True, fmt='.3f', cmap='YlOrRd', 
+                   ax=axes[idx], cbar_kws={'label': metric_name})
+        axes[idx].set_title(f'{metric_name}\n({direction})', 
+                          fontsize=11, fontweight='bold')
+        axes[idx].set_xlabel('Number of Clusters (k)', fontsize=10)
+        axes[idx].set_ylabel('', fontsize=10)
+    
+    plt.suptitle(f'{perspective_name} - Clustering Method Comparison', 
+                fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.show()
+    
+    return results_df
+
+def analyze_clusters_detailed(df, cluster_column, feature_columns):
+    """Detailed cluster analysis with statistics"""
+    print(f"\n{'='*70}")
+    print(f"CLUSTER ANALYSIS: {cluster_column}")
+    print(f"{'='*70}\n")
+    
+    # Cluster sizes
+    print("Cluster Sizes:")
+    sizes = df[cluster_column].value_counts().sort_index()
+    print(sizes)
+    print(f"\nPercentage distribution:")
+    print((sizes / len(df) * 100).round(2))
+    
+    # Cluster means
+    print(f"\n{'-'*70}")
+    print("Cluster Means:")
+    print(f"{'-'*70}")
+    cluster_means = df.groupby(cluster_column)[feature_columns].mean()
+    
+    return cluster_means
+
+def plot_umap_comparison(df, cluster_columns, feature_columns):
+    """Plot UMAP projections for multiple clustering results"""
+    num_plots = len(cluster_columns)
+    num_cols = min(3, num_plots)
+    num_rows = math.ceil(num_plots / num_cols)
+    
+    fig, axes = plt.subplots(num_rows, num_cols, 
+                            figsize=(6*num_cols, 5*num_rows))
+    
+    if num_plots == 1:
+        axes = [axes]
+    else:
+        axes = axes.flatten() if num_plots > 1 else [axes]
+    
+    for idx, cluster_col in enumerate(cluster_columns):
+        # Prepare features
+        features = df[feature_columns]
+        labels = df[cluster_col]
+        
+        # UMAP
+        reducer = umap.UMAP(n_components=2, random_state=42, n_neighbors=15)
+        embedding = reducer.fit_transform(features)
+        
+        # Plot
+        scatter = axes[idx].scatter(
+            embedding[:, 0], 
+            embedding[:, 1],
+            c=labels,
+            cmap='Spectral',
+            s=20,
+            alpha=0.6,
+            edgecolors='none'
+        )
+        
+        axes[idx].set_title(cluster_col, fontsize=11, fontweight='bold')
+        axes[idx].set_xlabel('UMAP 1', fontsize=10)
+        axes[idx].set_ylabel('UMAP 2', fontsize=10)
+        
+        # Colorbar
+        cbar = plt.colorbar(scatter, ax=axes[idx])
+        cbar.set_label('Cluster', fontsize=9)
+    
+    # Remove unused subplots
+    for idx in range(len(cluster_columns), len(axes)):
+        fig.delaxes(axes[idx])
+    
+    plt.tight_layout()
+    plt.show()
+
+def extract_and_filter_segments(df, cluster_column, clusters_to_extract, 
+                               segment_names, feature_columns):
+    """
+    Extract identified segments and return filtered dataset
+    
+    Args:
+        df: Original dataframe
+        cluster_column: Column containing cluster labels
+        clusters_to_extract: List of cluster IDs to extract
+        segment_names: List of names for each extracted cluster
+        feature_columns: Original feature columns
+    
+    Returns:
+        segments_dict: Dictionary of extracted segments
+        filtered_df: Remaining data after extraction
+    """
+    segments = {}
+    
+    print(f"\n{'='*70}")
+    print("SEGMENT EXTRACTION")
+    print(f"{'='*70}\n")
+    
+    for cluster_id, segment_name in zip(clusters_to_extract, segment_names):
+        segment = df[df[cluster_column] == cluster_id][feature_columns].copy()
+        segments[segment_name] = segment
+        print(f"{segment_name:.<30} {len(segment):>6} customers ({len(segment)/len(df)*100:.1f}%)")
+    
+    # Create filtered dataset
+    filtered_df = df[~df[cluster_column].isin(clusters_to_extract)][feature_columns].copy()
+    print(f"{'Remaining for re-clustering':.<30} {len(filtered_df):>6} customers ({len(filtered_df)/len(df)*100:.1f}%)")
+    
+    return segments, filtered_df
