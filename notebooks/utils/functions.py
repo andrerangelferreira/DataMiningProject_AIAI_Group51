@@ -25,6 +25,9 @@ from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 #import geopandas as gpd
 
+from sklearn.neighbors import NearestNeighbors
+from kneed import KneeLocator
+
 #FUNÇOES
 
 import matplotlib.pyplot as plt
@@ -79,6 +82,43 @@ def num_per_cat(data, numerical_var, cat_var, rotation = 0):
     plt.xticks()
     plt.tick_params(axis="x", rotation = rotation)
     plt.tight_layout()
+    plt.show()
+
+def correlation_matrix(data, threshold, x, y):
+
+    """
+    correlation_matrix plots a Pearson correlation matrix heatmap for numerical features in a dataset,
+    displaying correlation values only when their absolute value exceeds a given
+    threshold. We used it to analyse the correlation between our numerical features in EDA.
+
+    Parameters:
+    data : Input dataset containing numerical variables.
+    
+    threshold : Minimum absolute correlation value required for a cell to be annotated
+
+    Returns: None, displays a correlation heatmap.
+    """
+    
+    corr = data.corr(method="pearson")
+    corr = corr.round(2)
+
+    mask_annot = np.absolute(corr.values) >= threshold
+
+    annot = np.where(mask_annot, corr.values, np.full(corr.shape,"")) 
+
+    fig = plt.figure(figsize=(x, y))
+
+    # Plotting the heatmap of the correlation matrix
+    sns.heatmap(data=corr, 
+                annot=annot, # Specifing custom annotation
+                fmt='s', # The annotation matrix now has strings, so we need to explicitly say this
+                vmin=-1, vmax=1, 
+                center=0,
+                square=True, # Make each cell square-shaped
+                linewidths=.5, # Adding lines between cells
+                cmap='PiYG' # Diverging color map
+                )
+
     plt.show()
 
 def set_plot_properties(ax, x_label, y_label, y_lim=[]):
