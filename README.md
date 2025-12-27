@@ -38,7 +38,7 @@ In this part we:
 - Performed descriptive analysis and visualizations to identify key patterns and variables for segmentation; <br>
 - Evaluated data quality and its impact on clustering reliability; <br>
 - Identified initial behavioral signals indicating distinct customer groups; <br>
-- Created and justified engineered features to better capture customer behavior. <br
+- Created and justified engineered features to better capture customer behavior. <br>
 
 
 ### Final Delivery | Clustering Analysis
