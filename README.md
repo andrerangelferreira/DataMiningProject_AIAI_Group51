@@ -20,8 +20,8 @@
 
 ## Submission Details
 **Platform:** Moodle <br>
-**Handout Deadline:** November 4th <br>
-**Project Deadline:** January 3rd <br>
+**Delivery1 Deadline:** November 4th <br>
+**Delivery2 Deadline:** January 3rd <br>
 
 ## Technical Details
 - Programming Language: `Python` <br>
