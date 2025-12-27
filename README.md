@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="300" alt="nova_ims_logo" src="(https://github.com/user-attachments/assets/a85c3743-9515-4720-bc28-e003f621a4b5" /> 
+  <img width="541" height="328" alt="ims_LOGO" src="https://github.com/user-attachments/assets/251c0550-5087-4451-a7cf-bcbeacd6e3a1" />
 
   **Master in Data Science and Advanced Analytics** <br>
   **Data Mining** <br>
