@@ -1,7 +1,6 @@
 <div align="center">
-  <img width="300" alt="nova_ims_logo" src="![nova_ims_logo](https://github.com/user-attachments/assets/9c814823-ad22-4e39-94f4-15399ac7175f)
-" /> 
-  
+  <img width="300" alt="nova_ims_logo" src="(https://github.com/user-attachments/assets/a85c3743-9515-4720-bc28-e003f621a4b5" /> 
+
   **Master in Data Science and Advanced Analytics** <br>
   **Data Mining** <br>
   **2025–2026**
@@ -14,10 +13,10 @@
 ## Team Members
 | Name | Student ID |
 | :--- | :--- |
-| Henrique Serrão | 20250359 |
-| Lara Santos | 20221823 |
-| Marco Martins | 20221951 |
+| André Ferreira | 20250398 |
+| Fausto Gomes | 20221915 |
 | Maria Francisca Gonçalves | 20221942 |
+| Miguel Matos | 20221925 |
 
 ## Submission Details
 **Platform:** Moodle <br>
