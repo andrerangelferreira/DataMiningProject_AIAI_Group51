@@ -218,7 +218,7 @@ def plot_dendrogram(data, linkage_method, cut_line=None):
     plt.show()
 
 
-def plot_umap_projections(people, cluster_columns, n_components=2, random_state=42):
+def plot_umap_projections(people, cluster_columns, n_components=2, n_neighbors = 15, min_dist = 0.1, random_state=42):
     """
     Generates UMAP projections for multiple clustering methods and plots them in a grid.
 
@@ -251,7 +251,8 @@ def plot_umap_projections(people, cluster_columns, n_components=2, random_state=
         clusters = people[cluster_column]
 
         # Perform UMAP
-        reducer = umap.UMAP(n_components=n_components, random_state=random_state)
+        reducer = umap.UMAP(n_components=n_components, random_state=random_state, n_neighbors = n_neighbors,
+                            min_dist = min_dist)
         umap_embedding = reducer.fit_transform(features)
 
         # Plot the UMAP embedding
